@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { BitBucketServerRepoRef } from "@atomist/automation-client";
 import {
     SoftwareDeliveryMachine,
     SoftwareDeliveryMachineConfiguration,
@@ -21,7 +22,14 @@ import {
 import {
     createSoftwareDeliveryMachine,
 } from "@atomist/sdm-core";
-
+import {
+  ReplaceReadmeTitle,
+  SetAtomistTeamInApplicationYml,
+  SpringProjectCreationParameterDefinitions,
+  SpringProjectCreationParameters,
+  TransformSeedToCustomProject,
+} from "@atomist/sdm-pack-spring";
+import { FixedRepoCreationParameters } from "../../index";
 /**
  * Initialize an sdm definition, and add functionality to it.
  *
@@ -34,6 +42,25 @@ export function machine(
     const sdm = createSoftwareDeliveryMachine({
         name: "Empty Seed Software Delivery Machine",
         configuration,
+    });
+
+    sdm.addGeneratorCommand<SpringProjectCreationParameters>({
+        name: "create-spring",
+        intent: "create spring",
+        description: "Create a new Java Spring Boot REST service",
+        parameters: SpringProjectCreationParameterDefinitions,
+        startingPoint: () => new BitBucketServerRepoRef(
+            configuration.sdm.git.url,
+            "matt",
+            "newseed",
+        ),
+        fallbackTarget: () => new FixedRepoCreationParameters(),
+        transform: [
+            ReplaceReadmeTitle,
+            SetAtomistTeamInApplicationYml,
+            TransformSeedToCustomProject,
+        ],
+        tags: ["spring", "boot", "java", "generator"],
     });
 
     /*

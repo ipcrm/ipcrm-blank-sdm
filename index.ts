@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Configuration } from "@atomist/automation-client";
+import { Configuration, configurationValue, ProjectOperationCredentials } from "@atomist/automation-client";
+import { BitBucketRepoCreationParameters } from "@atomist/sdm";
 import {
+    ConfigurationBasedBasicCredentialsResolver,
     ConfigureOptions,
     configureSdm,
 } from "@atomist/sdm-core";
@@ -34,6 +36,9 @@ const machineOptions: ConfigureOptions = {
  * The starting point for building an SDM is here!
  */
 export const configuration: Configuration = {
+    sdm: {
+        credentialsResolver: new ConfigurationBasedBasicCredentialsResolver(),
+    },
     /**
      * To run in team mode, you'll need an Atomist workspace.
      * To run in local mode, you don't. This will be ignored.
@@ -51,3 +56,17 @@ export const configuration: Configuration = {
         configureSdm(machine, machineOptions),
     ],
 };
+
+export function bitBucketCredentials(): ProjectOperationCredentials {
+    return {
+        username: configurationValue<string>("sdm.git.user"),
+        password: configurationValue<string>("sdm.git.password"),
+    };
+}
+
+export class FixedRepoCreationParameters extends BitBucketRepoCreationParameters {
+
+    get credentials(): ProjectOperationCredentials {
+            return bitBucketCredentials();
+    }
+}
